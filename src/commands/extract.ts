@@ -5,6 +5,7 @@ import { registerPrompt } from 'inquirer';
 import * as yargs from 'yargs';
 import { statSync } from 'fs';
 import findRepo from '../findRepo';
+import { resolve, join } from 'path';
 import writeHistory from '../writeHistory';
 // @ts-ignore
 registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
@@ -62,14 +63,14 @@ export async function handler({ path: _path, dest: _dest }: Params) {
     throw new Error('This cli can only be used inside a git repository');
   }
   const path = _path || (await askSrc());
-  const dest = _dest || (await askDest());
+  const dest = resolve(_dest || (await askDest()));
   const stat = statSync(path);
 
   let glob = `${path}`;
   let files = [glob];
 
   if (stat.isDirectory()) {
-    glob = `${glob}/**/*`;
+    glob = join(glob, '/**/*');
     files = sync([glob]);
   }
 
