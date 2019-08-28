@@ -1,0 +1,42 @@
+import { Repository } from 'nodegit';
+import { resolve, extname, basename } from 'path';
+import { pathExistsSync, outputFile } from 'fs-extra';
+
+const defaultRepoPath = process.cwd();
+const defaultOutputDir = resolve(process.cwd(), 'versions');
+
+export default async function writeFileHistory(
+  filePath: string,
+  repoPath: string = defaultRepoPath,
+  _outputDir: string = defaultOutputDir
+) {
+  if (!pathExistsSync(filePath)) {
+    throw new Error(`"${filePath}" does not exist`);
+  }
+
+  const extName = extname(filePath);
+  const outputDir = resolve(_outputDir, basename(filePath, extName));
+
+  return Repository.open(repoPath).then(async function read(repo) {
+    const walker = repo.createRevWalk();
+    const headCommit = await repo.getHeadCommit();
+    walker.push(headCommit.id());
+
+    const commits = await walker.fileHistoryWalk(filePath, 30000);
+    return Promise.all(
+      commits.map(async function({ commit }) {
+        commit.repo = repo;
+        try {
+          const entry = await commit.getEntry(filePath);
+          const blob = await entry.getBlob();
+          return outputFile(
+            resolve(outputDir, `${commit.id()}.${extName}`),
+            blob
+          );
+        } catch (err) {
+          console.log(err);
+        }
+      })
+    );
+  });
+}

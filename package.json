@@ -1,11 +1,11 @@
 {
-  "name": "versioning-docs",
+  "name": "document-version-cli",
   "version": "0.0.1",
   "main": "index.js",
   "author": "Future Finance",
   "license": "MIT",
   "bin": {
-    "vers": "dist/index.js"
+    "docvers": "dist/index.js"
   },
   "files": [
     "dist"
@@ -24,7 +24,7 @@
     "@types/chalk": "^0.4.31",
     "@types/inquirer": "^0.0.35",
     "@types/jest": "^20.0.4",
-    "@types/node": "^8.0.14",
+    "@types/node": "^12.7.2",
     "@types/node-emoji": "^1.4.0",
     "@types/yargs": "^8.0.1",
     "babel-eslint": "^7.2.3",
@@ -41,11 +41,16 @@
     "typescript-eslint-parser": "^4.0.0"
   },
   "dependencies": {
+    "@types/fs-extra": "^8.0.0",
+    "@types/nodegit": "^0.24.10",
     "chalk": "^2.0.1",
     "fast-glob": "^3.0.4",
+    "fs-extra": "^8.1.0",
     "husky": "^0.14.3",
     "inquirer": "^3.2.0",
+    "inquirer-fuzzy-path": "^2.1.0",
     "node-emoji": "^1.7.0",
+    "nodegit": "^0.25.1",
     "yargs": "^8.0.2"
   },
   "lint-staged": {

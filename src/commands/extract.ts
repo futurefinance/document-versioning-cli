@@ -1,16 +1,24 @@
 import { logInfo } from '../utils';
 import { prompt as ask } from 'inquirer';
 import { sync } from 'fast-glob';
-
-import * as yargs from 'yargs'; // eslint-disable-line no-unused-vars
+import { registerPrompt } from 'inquirer';
+import * as yargs from 'yargs';
+import { statSync } from 'fs';
+import writeHistory from '../writeHistory';
+// @ts-ignore
+registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 
 async function askPath(): Promise<string> {
-  logInfo(':tada: Which file/folder path would you like to version?');
+  logInfo('What would you like to extract');
   const { path } = await ask([
     {
-      type: 'input',
+      type: 'fuzzypath',
       name: 'path',
-      message: 'e.g: ./my-documents/contract-one.md'
+      // @ts-ignore
+      excludePath: nodePath =>
+        nodePath.startsWith('node_modules') || nodePath.startsWith('.git'),
+      message: ':folder: Select a path for extracting versions',
+      default: './'
     }
   ]);
   return path;
@@ -22,8 +30,21 @@ export const desc = 'Extract versions from files in path';
 export const builder: { [key: string]: yargs.Options } = {
   path: { type: 'string', required: false, description: 'file/folder path' }
 };
-export async function handler({ path }: Params) {
-  logInfo(`Extracting, ${path || (await askPath())}!`);
-  const files = sync(path);
-  console.log(files);
+
+export async function handler({ path: _path }: Params) {
+  const path = _path || (await askPath());
+  logInfo(`Extracting, ${path}!`);
+  const stat = statSync(path);
+
+  let glob = `${path}`;
+  let files = [glob];
+
+  if (stat.isDirectory()) {
+    glob = `${glob}/**/*`;
+    files = sync([glob]);
+  }
+
+  return Promise.all(files.map(path => writeHistory(path))).then(() => {
+    logInfo(`:tada: It worked!`);
+  });
 }
