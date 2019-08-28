@@ -2,9 +2,6 @@ import { Repository } from 'nodegit';
 import { resolve, extname, basename } from 'path';
 import { pathExistsSync, outputFile } from 'fs-extra';
 
-const defaultRepoPath = process.cwd();
-const defaultOutputDir = resolve(process.cwd(), 'versions');
-
 export default async function writeFileHistory(
   filePath: string,
   repoPath: string = defaultRepoPath,

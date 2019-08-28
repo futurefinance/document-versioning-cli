@@ -4,12 +4,13 @@ import { sync } from 'fast-glob';
 import { registerPrompt } from 'inquirer';
 import * as yargs from 'yargs';
 import { statSync } from 'fs';
+import findRepo from '../findRepo';
 import writeHistory from '../writeHistory';
 // @ts-ignore
 registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 
-async function askPath(): Promise<string> {
-  logInfo('What would you like to extract');
+async function askSrc(): Promise<string> {
+  logInfo('Which path (file or folder) would you like to version?');
   const { path } = await ask([
     {
       type: 'fuzzypath',
@@ -24,16 +25,35 @@ async function askPath(): Promise<string> {
   return path;
 }
 
-export type Params = { path?: string };
+async function askDest(): Promise<string> {
+  logInfo(
+    "Which destination folder would you like to use for your versioned documents? (it doesn't have to exist)"
+  );
+  const { dest } = await ask([
+    {
+      type: 'input',
+      name: 'dest',
+      message: ':folder: Select a path for your output',
+      default: './'
+    }
+  ]);
+  return dest;
+}
+
+export type Params = { path?: string; dest?: string };
 export const command = 'extract';
 export const desc = 'Extract versions from files in path';
 export const builder: { [key: string]: yargs.Options } = {
   path: { type: 'string', required: false, description: 'file/folder path' }
 };
 
-export async function handler({ path: _path }: Params) {
-  const path = _path || (await askPath());
-  logInfo(`Extracting, ${path}!`);
+export async function handler({ path: _path, dest: _dest }: Params) {
+  const repo = await findRepo();
+  if (!repo) {
+    throw new Error('This cli can only be used inside a git repository');
+  }
+  const path = _path || (await askSrc());
+  const dest = _dest || (await askDest());
   const stat = statSync(path);
 
   let glob = `${path}`;
@@ -44,7 +64,12 @@ export async function handler({ path: _path }: Params) {
     files = sync([glob]);
   }
 
-  return Promise.all(files.map(path => writeHistory(path))).then(() => {
-    logInfo(`:tada: It worked!`);
+  return Promise.all(
+    files.map(path => {
+      logInfo(`Extracting versions for file "${path}"!`);
+      return writeHistory(path, repo, dest);
+    })
+  ).then(() => {
+    logInfo(`:tada: Extracted all versions from path: "${path}"!`);
   });
 }
