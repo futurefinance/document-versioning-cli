@@ -1,24 +1,18 @@
 import { logInfo } from '../utils';
 import { prompt as ask } from 'inquirer';
-import { sync } from 'fast-glob';
-import { registerPrompt } from 'inquirer';
+import { sync } from 'glob';
 import * as yargs from 'yargs';
 import { statSync } from 'fs';
 import findRepo from '../findRepo';
 import { resolve, join } from 'path';
 import writeHistory from '../writeHistory';
-// @ts-ignore
-registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
 
 async function askSrc(): Promise<string> {
   logInfo('Which path (file or folder) would you like to version?');
   const { path } = await ask([
     {
-      type: 'fuzzypath',
+      type: 'input',
       name: 'path',
-      // @ts-ignore
-      excludePath: nodePath =>
-        nodePath.startsWith('node_modules') || nodePath.startsWith('.git'),
       message: ':folder: Select a path for extracting versions',
       default: './'
     }
@@ -71,7 +65,7 @@ export async function handler({ path: _path, dest: _dest }: Params) {
 
   if (stat.isDirectory()) {
     glob = join(glob, '/**/*');
-    files = sync([glob]);
+    files = sync(glob);
   }
 
   return Promise.all(
