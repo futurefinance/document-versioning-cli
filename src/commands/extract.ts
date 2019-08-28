@@ -44,7 +44,16 @@ export type Params = { path?: string; dest?: string };
 export const command = 'extract';
 export const desc = 'Extract versions from files in path';
 export const builder: { [key: string]: yargs.Options } = {
-  path: { type: 'string', required: false, description: 'file/folder path' }
+  path: {
+    type: 'string',
+    required: false,
+    description: 'source file/folder path for versioning'
+  },
+  dest: {
+    type: 'string',
+    required: false,
+    description: 'dest folder for version output'
+  }
 };
 
 export async function handler({ path: _path, dest: _dest }: Params) {
