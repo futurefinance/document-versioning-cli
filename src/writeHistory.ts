@@ -4,8 +4,8 @@ import { pathExistsSync, outputFile } from 'fs-extra';
 
 export default async function writeFileHistory(
   filePath: string,
-  repoPath: string = defaultRepoPath,
-  _outputDir: string = defaultOutputDir
+  repoPath: string,
+  _outputDir: string
 ) {
   if (!pathExistsSync(filePath)) {
     throw new Error(`"${filePath}" does not exist`);
